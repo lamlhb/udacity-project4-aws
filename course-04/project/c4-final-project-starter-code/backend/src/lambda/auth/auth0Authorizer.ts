@@ -1,4 +1,4 @@
-import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
+import { APIGatewayTokenAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import 'source-map-support/register'
 
 import { verify, decode } from 'jsonwebtoken'
@@ -14,10 +14,30 @@ const logger = createLogger('auth')
 // To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
 const jwksUrl = 'https://dev-uc8gx3yiacbxgp12.us.auth0.com/.well-known/jwks.json';
 
-export const handler = async (event: CustomAuthorizerEvent): Promise<CustomAuthorizerResult> => {
+const defaultCert = '-----BEGIN CERTIFICATE-----\n' +
+  'MIIDHTCCAgWgAwIBAgIJKy2PA/mZxSLOMA0GCSqGSIb3DQEBCwUAMCwxKjAoBgNV\n' +
+  'BAMTIWRldi11YzhneDN5aWFjYnhncDEyLnVzLmF1dGgwLmNvbTAeFw0yMjEyMjcw\n' +
+  'OTM2MDlaFw0zNjA5MDQwOTM2MDlaMCwxKjAoBgNVBAMTIWRldi11YzhneDN5aWFj\n' +
+  'YnhncDEyLnVzLmF1dGgwLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC\n' +
+  'ggEBAM/QDvmStphtE1zl6NtkElmlDbX8VhHHhUf5i2T4NHvOLKzPXP/x2l78UPdJ\n' +
+  'RJFMAK68wfeEeYa7xIdV5pmQsoIkx2VvyWmTsmAXEoCSSlwfuqoMuGcni8HLsO4l\n' +
+  'zsRjhgexQpiXa1jEjdzaigesSxapUvyziBx7KBzWsT5YdjSi838b7SddwaRYjWjN\n' +
+  'iNWsk+uwSWyY3faFj8JV9dDMdB9arNF1cIZSEt55BercS1VS+NAlT5mS9Gu6dCOW\n' +
+  'wA4PGkvh9k4yAvQiszzmI6fnsAm8yI2gny94kkfo9QVA9++FWHtng87MYQuNEYy4\n' +
+  '/vQBnq5gkyoUFaheegeSdVCCfVkCAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAd\n' +
+  'BgNVHQ4EFgQU1OFv9ApzfNuFSz4VNz0MCZC0ItEwDgYDVR0PAQH/BAQDAgKEMA0G\n' +
+  'CSqGSIb3DQEBCwUAA4IBAQBNplFA7SpBWQNbiPtrMxDEfvOUr6k93d22FICnEYVw\n' +
+  'CUK7i3VsY9SMJbheu7axcT0iI6yQlXxRZQ4AmimOdkiFZ03zbvl0aOZOu+KrG/sj\n' +
+  'x0AyXsgOuBLPe0QthGFYiFhl1n9o+K8NrxnhT7+Cy652Dg2+PNDVwj7Ps+LXnhod\n' +
+  'oXt1V4zdwVY15WM1aabLTnSKUjgR40wJX+zJk3ZAl+iZyJtt88n+qjr68t/u3dK4\n' +
+  'QMb28CZUPDBk2m+Kr3VMFWT2MtZ0jEMw7KYwEE/oyACuoJuQR9DRsrxkMr4UUNe7\n' +
+  'YBvuLYZvTycFm6dteMQc5WkY1kQ+4z1W/lFCK789Y2lK\n' +
+  '-----END CERTIFICATE-----'
 
+export const handler = async (
+  event: APIGatewayTokenAuthorizerEvent
+): Promise<CustomAuthorizerResult> => {
   logger.info('Authorizing a user', event.authorizationToken)
-
   try {
     const jwtToken = await verifyToken(event.authorizationToken)
     logger.info('User was authorized', jwtToken)
@@ -36,7 +56,7 @@ export const handler = async (event: CustomAuthorizerEvent): Promise<CustomAutho
       }
     }
   } catch (e) {
-    logger.error('User not authorized', { error: e.message })
+    logger.error('User not authorized', { error: e.toString() })
 
     return {
       principalId: 'user',
@@ -61,10 +81,13 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
   // TODO: Implement token verification
   // You should implement it similarly to how it was implemented for the exercise for the lesson 5
   // You can read more about how to do this here: https://auth0.com/blog/navigating-rs256-and-jwks/
-  let key = await getSigningKey(jwksUrl, jwt.header.kid)
+  logger.error('jwt --- ' + jwt)
+  logger.error('jwt.kid --- ' + jwt.header.kid)
+  let signKey = await getKey(jwksUrl, jwt.header.kid);
 
-  return verify(token, key.publicKey, { algorithms: ['RS256'] }
-  ) as JwtPayload
+  logger.error('sign-key --- ' + signKey.publicKey)
+
+  return verify (token, defaultCert, { algorithms: ['RS256'] }) as JwtPayload;
 }
 
 function getToken(authHeader: string): string {
@@ -75,40 +98,50 @@ function getToken(authHeader: string): string {
 
   const split = authHeader.split(' ')
   const token = split[1]
+  logger.error('token --- ' + token)
 
   return token
 }
 
-const getSigningKey = async (jwkurl: string, kid: string) => {
-  let res = await Axios.get(jwkurl, {
-    headers: {
-      'Content-Type': 'application/json',
-      "Access-Control-Allow-Origin": "*",
-      'Access-Control-Allow-Credentials': true,
-    },
-  });
+const getKey = async (jwksUrl, kid) => {
 
-  let keys = res.data.keys;
+  // Get list of keys from provided jwksUrl
+    let res = await Axios.get(jwksUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        "Access-Control-Allow-Origin": "*",
+        'Access-Control-Allow-Credentials': true,
+        "Accept-Encoding": "gzip,deflate,compress",
+      }
+    });
 
-  const signingKeys = keys.filter(key => key.use === 'sig'
-    && key.kty === 'RSA' && key.kid
-    && key.x5c && key.x5c.length
-  ).map(key => {
-    return { kid: key.kid, nbf: key.nbf, publicKey: certToPEM(key.x5c[0]) };
-  });
+    logger.error('res.data --- ' + res.data)
+    let keys  = res.data.keys;
 
-  const signingKey = signingKeys.find(key => key.kid === kid);
-  if (!signingKey) {
-    logger.error("No signing keys found")
-    throw new Error('Invalid signing keys')
-  }
+    // filter in list of response keys to find the signing key
+    const signingKey = keys.filter(key => key.use === 'sig' // determines the key is signing key
+      && key.kty === 'RSA' // supporting for RSA
+      && key.kid && key.kid === kid// using to compare with kid in jwt
+      && key.x5c && key.x5c.length
+    ).map(key => {
+      return { kid: key.kid, nbf: key.nbf, publicKey: convertCertToPem(key.x5c[0]) };
+    });
 
-  logger.info("Signing keys created successfully ", signingKey)
-  return signingKey;
-};
+    // const signKey = signingKeys.find(key => key.kid === kid);
+    if (!signingKey) {
+      throw new Error('Unauthorized');
+    }
+    return signingKey;
 
-function certToPEM(cert: string) {
+
+}
+
+function convertCertToPem(cert: string) {
   cert = cert.match(/.{1,64}/g).join('\n');
   cert = `-----BEGIN CERTIFICATE-----\n${cert}\n-----END CERTIFICATE-----\n`;
+
+  logger.error('cert --- ' + cert)
+
   return cert;
 }
+
