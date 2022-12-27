@@ -4,16 +4,46 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
 
-import { createAttachmentPresignedUrl } from '../../businessLogic/todos'
 import { getUserId } from '../utils'
+import { getSignedUploadUrl, updateAttachmentUrl } from '../../helpers/todos'
+import * as uuid from 'uuid'
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const todoId = event.pathParameters.todoId
-    // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
-    
+    try {
+      const todoId = event.pathParameters.todoId
+      // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
 
-    return undefined
+      const attachId = uuid.v4;
+
+      // update url first
+      updateAttachmentUrl(todoId, getUserId(event), attachId);
+
+      const preSign = await getSignedUploadUrl(attachId);
+
+      return {
+        statusCode: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Credentials': true
+        },
+        body: JSON.stringify({
+          "pre-sign": preSign
+        })
+      }
+    } catch (err) {
+      return {
+        statusCode: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Credentials': true
+        },
+        body: JSON.stringify({
+          "message": "Internal Error"
+        })
+      }
+    }
+
   }
 )
 
