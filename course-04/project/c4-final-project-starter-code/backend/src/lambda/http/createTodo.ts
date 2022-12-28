@@ -30,7 +30,7 @@ export const handler = middy(
       return {
         statusCode: 500,
         body: JSON.stringify({
-          "message": "Internal Error"
+          "message": "Internal Error" + err.message
         })
       }
     }

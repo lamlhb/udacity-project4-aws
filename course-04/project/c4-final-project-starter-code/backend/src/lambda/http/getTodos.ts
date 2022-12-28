@@ -8,6 +8,9 @@ import { cors } from 'middy/middlewares'
 import { getUserId } from '../utils';
 // import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
 import { getToDoItems } from '../../helpers/todos'
+import { createLogger } from '../../utils/logger'
+
+const logger = createLogger('auth')
 
 // TODO: Get all TODO items for a current user
 export const handler = middy(
@@ -16,10 +19,14 @@ export const handler = middy(
 
     try {
       // TODO: Implement creating a new TODO item
+
+      logger.error('Get Todos Start')
       const userId = getUserId(event);
+      logger.error('userId --- ' + userId)
 
       const items = await getToDoItems(userId);
 
+      logger.error('Get Todos End')
       return {
         statusCode: 200,
         headers: {
@@ -34,7 +41,7 @@ export const handler = middy(
       return {
         statusCode: 500,
         body: JSON.stringify({
-          "message": "Internal Error"
+          "message": "Internal Error " + err.message
         })
       }
     }

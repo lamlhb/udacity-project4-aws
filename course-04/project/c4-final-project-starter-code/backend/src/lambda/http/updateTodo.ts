@@ -37,7 +37,7 @@ export const handler = middy(
           'Access-Control-Allow-Credentials': true
         },
         body: JSON.stringify({
-          "message": "Internal Error"
+          "message": "Internal Error" + err.message
         })
       }
     }

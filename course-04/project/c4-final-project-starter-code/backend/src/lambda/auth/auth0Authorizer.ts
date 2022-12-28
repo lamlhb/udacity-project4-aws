@@ -14,25 +14,25 @@ const logger = createLogger('auth')
 // To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
 const jwksUrl = 'https://dev-uc8gx3yiacbxgp12.us.auth0.com/.well-known/jwks.json';
 
-const defaultCert = '-----BEGIN CERTIFICATE-----\n' +
-  'MIIDHTCCAgWgAwIBAgIJKy2PA/mZxSLOMA0GCSqGSIb3DQEBCwUAMCwxKjAoBgNV\n' +
-  'BAMTIWRldi11YzhneDN5aWFjYnhncDEyLnVzLmF1dGgwLmNvbTAeFw0yMjEyMjcw\n' +
-  'OTM2MDlaFw0zNjA5MDQwOTM2MDlaMCwxKjAoBgNVBAMTIWRldi11YzhneDN5aWFj\n' +
-  'YnhncDEyLnVzLmF1dGgwLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC\n' +
-  'ggEBAM/QDvmStphtE1zl6NtkElmlDbX8VhHHhUf5i2T4NHvOLKzPXP/x2l78UPdJ\n' +
-  'RJFMAK68wfeEeYa7xIdV5pmQsoIkx2VvyWmTsmAXEoCSSlwfuqoMuGcni8HLsO4l\n' +
-  'zsRjhgexQpiXa1jEjdzaigesSxapUvyziBx7KBzWsT5YdjSi838b7SddwaRYjWjN\n' +
-  'iNWsk+uwSWyY3faFj8JV9dDMdB9arNF1cIZSEt55BercS1VS+NAlT5mS9Gu6dCOW\n' +
-  'wA4PGkvh9k4yAvQiszzmI6fnsAm8yI2gny94kkfo9QVA9++FWHtng87MYQuNEYy4\n' +
-  '/vQBnq5gkyoUFaheegeSdVCCfVkCAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAd\n' +
-  'BgNVHQ4EFgQU1OFv9ApzfNuFSz4VNz0MCZC0ItEwDgYDVR0PAQH/BAQDAgKEMA0G\n' +
-  'CSqGSIb3DQEBCwUAA4IBAQBNplFA7SpBWQNbiPtrMxDEfvOUr6k93d22FICnEYVw\n' +
-  'CUK7i3VsY9SMJbheu7axcT0iI6yQlXxRZQ4AmimOdkiFZ03zbvl0aOZOu+KrG/sj\n' +
-  'x0AyXsgOuBLPe0QthGFYiFhl1n9o+K8NrxnhT7+Cy652Dg2+PNDVwj7Ps+LXnhod\n' +
-  'oXt1V4zdwVY15WM1aabLTnSKUjgR40wJX+zJk3ZAl+iZyJtt88n+qjr68t/u3dK4\n' +
-  'QMb28CZUPDBk2m+Kr3VMFWT2MtZ0jEMw7KYwEE/oyACuoJuQR9DRsrxkMr4UUNe7\n' +
-  'YBvuLYZvTycFm6dteMQc5WkY1kQ+4z1W/lFCK789Y2lK\n' +
-  '-----END CERTIFICATE-----'
+// const defaultCert = '-----BEGIN CERTIFICATE-----\n' +
+//   'MIIDHTCCAgWgAwIBAgIJKy2PA/mZxSLOMA0GCSqGSIb3DQEBCwUAMCwxKjAoBgNV\n' +
+//   'BAMTIWRldi11YzhneDN5aWFjYnhncDEyLnVzLmF1dGgwLmNvbTAeFw0yMjEyMjcw\n' +
+//   'OTM2MDlaFw0zNjA5MDQwOTM2MDlaMCwxKjAoBgNVBAMTIWRldi11YzhneDN5aWFj\n' +
+//   'YnhncDEyLnVzLmF1dGgwLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC\n' +
+//   'ggEBAM/QDvmStphtE1zl6NtkElmlDbX8VhHHhUf5i2T4NHvOLKzPXP/x2l78UPdJ\n' +
+//   'RJFMAK68wfeEeYa7xIdV5pmQsoIkx2VvyWmTsmAXEoCSSlwfuqoMuGcni8HLsO4l\n' +
+//   'zsRjhgexQpiXa1jEjdzaigesSxapUvyziBx7KBzWsT5YdjSi838b7SddwaRYjWjN\n' +
+//   'iNWsk+uwSWyY3faFj8JV9dDMdB9arNF1cIZSEt55BercS1VS+NAlT5mS9Gu6dCOW\n' +
+//   'wA4PGkvh9k4yAvQiszzmI6fnsAm8yI2gny94kkfo9QVA9++FWHtng87MYQuNEYy4\n' +
+//   '/vQBnq5gkyoUFaheegeSdVCCfVkCAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAd\n' +
+//   'BgNVHQ4EFgQU1OFv9ApzfNuFSz4VNz0MCZC0ItEwDgYDVR0PAQH/BAQDAgKEMA0G\n' +
+//   'CSqGSIb3DQEBCwUAA4IBAQBNplFA7SpBWQNbiPtrMxDEfvOUr6k93d22FICnEYVw\n' +
+//   'CUK7i3VsY9SMJbheu7axcT0iI6yQlXxRZQ4AmimOdkiFZ03zbvl0aOZOu+KrG/sj\n' +
+//   'x0AyXsgOuBLPe0QthGFYiFhl1n9o+K8NrxnhT7+Cy652Dg2+PNDVwj7Ps+LXnhod\n' +
+//   'oXt1V4zdwVY15WM1aabLTnSKUjgR40wJX+zJk3ZAl+iZyJtt88n+qjr68t/u3dK4\n' +
+//   'QMb28CZUPDBk2m+Kr3VMFWT2MtZ0jEMw7KYwEE/oyACuoJuQR9DRsrxkMr4UUNe7\n' +
+//   'YBvuLYZvTycFm6dteMQc5WkY1kQ+4z1W/lFCK789Y2lK\n' +
+//   '-----END CERTIFICATE-----'
 
 export const handler = async (
   event: APIGatewayTokenAuthorizerEvent
@@ -85,12 +85,19 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
   logger.error('jwt.kid --- ' + jwt.header.kid)
   let signKey = await getKey(jwksUrl, jwt.header.kid);
 
-  logger.error('sign-key --- ' + signKey.publicKey)
+  logger.error('sign-key-kid --- ' + signKey.kid)
+  logger.error('sign-key-str --- ' + signKey.nbf)
+  logger.error('sign-key-publicKey --- ' + signKey.publicKey)
 
-  return verify (token, defaultCert, { algorithms: ['RS256'] }) as JwtPayload;
+  const publicKey = convertCertToPem(signKey.publicKey)
+
+  logger.error('sign-key --- ' + publicKey)
+
+  return verify (token, publicKey, { algorithms: ['RS256'] }) as JwtPayload;
 }
 
 function getToken(authHeader: string): string {
+  logger.error('authHeader --- ' + authHeader)
   if (!authHeader) throw new Error('No authentication header')
 
   if (!authHeader.toLowerCase().startsWith('bearer '))
@@ -119,19 +126,22 @@ const getKey = async (jwksUrl, kid) => {
     let keys  = res.data.keys;
 
     // filter in list of response keys to find the signing key
-    const signingKey = keys.filter(key => key.use === 'sig' // determines the key is signing key
+    const signingKeys = keys.filter(key => key.use === 'sig' // determines the key is signing key
       && key.kty === 'RSA' // supporting for RSA
       && key.kid && key.kid === kid// using to compare with kid in jwt
       && key.x5c && key.x5c.length
     ).map(key => {
-      return { kid: key.kid, nbf: key.nbf, publicKey: convertCertToPem(key.x5c[0]) };
+      logger.error('key.x5c0 --- ' + key.x5c[0])
+      return { kid: key.kid, nbf: key.nbf, publicKey: key.x5c[0] };
     });
 
-    // const signKey = signingKeys.find(key => key.kid === kid);
-    if (!signingKey) {
+    const signKey = signingKeys.filter(key => key.kid === kid)?.[0];
+
+    if (!signKey) {
       throw new Error('Unauthorized');
     }
-    return signingKey;
+
+    return signKey;
 
 
 }

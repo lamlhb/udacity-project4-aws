@@ -14,7 +14,7 @@ export const handler = middy(
       const todoId = event.pathParameters.todoId
       // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
 
-      const attachId = uuid.v4;
+      const attachId = uuid.v4();
 
       // update url first
       updateAttachmentUrl(todoId, getUserId(event), attachId);
@@ -28,7 +28,7 @@ export const handler = middy(
           'Access-Control-Allow-Credentials': true
         },
         body: JSON.stringify({
-          "pre-sign": preSign
+          uploadUrl: preSign
         })
       }
     } catch (err) {
@@ -39,7 +39,7 @@ export const handler = middy(
           'Access-Control-Allow-Credentials': true
         },
         body: JSON.stringify({
-          "message": "Internal Error"
+          "message": "Internal Error" + err.message
         })
       }
     }
